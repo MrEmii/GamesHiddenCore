@@ -1,0 +1,7 @@
+name: GHCore
+version: @version@
+main: dev.emir.Main
+api-version: 1.16
+depend: [ PlaceholderAPI ]
+authors: [ Emir ]
+description: HubCore for GamesHidden
