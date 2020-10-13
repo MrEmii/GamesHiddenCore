@@ -1,9 +1,13 @@
 package dev.emir.models;
 
+import dev.emir.Main;
+import org.bson.Document;
 import org.bson.codecs.pojo.annotations.BsonIgnore;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class PlayerModel {
 
@@ -24,6 +28,9 @@ public class PlayerModel {
     private double xp = 0;
 
     @BsonIgnore
+    private transient Player playerTPA;
+
+    @BsonIgnore
     private transient Player player;
 
     public PlayerModel set(String last_server, String rank, String username, String uuid) {
@@ -31,6 +38,7 @@ public class PlayerModel {
         this.rank = rank;
         this.username = username;
         this.uuid = uuid;
+        this.player = Bukkit.getPlayer(uuid);
         return this;
     }
 
@@ -152,8 +160,9 @@ public class PlayerModel {
         return uuid;
     }
 
-    public void setUuid(String uuid) {
+    public PlayerModel setUuid(String uuid) {
         this.uuid = uuid;
+        return this;
     }
 
     public double getXp() {
@@ -168,7 +177,22 @@ public class PlayerModel {
         return player;
     }
 
-    public void setPlayer(Player player) {
+    public PlayerModel setPlayer(Player player) {
         this.player = player;
+        this.username = player.getName();
+        this.rank = Main.getInstance().getLuckPerms().getUserManager().getUser(UUID.fromString(uuid)).getPrimaryGroup();
+        return this;
+    }
+
+    public void save() {
+        Main.getInstance().getMongodb().replace("globalusers", "uuid", this.uuid, Document.parse(Main.gson.toJson(this)));
+    }
+
+    public Player getPlayerTPA() {
+        return playerTPA;
+    }
+
+    public void setPlayerTPA(Player playerTPA) {
+        this.playerTPA = playerTPA;
     }
 }
