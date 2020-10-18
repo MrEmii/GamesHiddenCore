@@ -6,7 +6,6 @@ import dev.emir.commands.GHCommands;
 import dev.emir.db.Mongod;
 import dev.emir.events.BungeeCoordEvents;
 import dev.emir.events.PlayerEvent;
-import dev.emir.events.SignsEvent;
 import dev.emir.managers.PlayerManager;
 import dev.emir.managers.SignsManager;
 import dev.emir.models.PlayerModel;
@@ -98,7 +97,6 @@ public class Main extends JavaPlugin {
             }
         }, 0L, 200L);
     }
-
 
     public void setupCommands() {
         CommandFramework framework = new CommandFramework(this);
