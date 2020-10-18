@@ -10,7 +10,7 @@ public class ChatCreator {
     private TextComponent component;
 
     public ChatCreator(String text) {
-        this.component = new TextComponent(text);
+        this.component = new TextComponent(ColorText.translate(text));
     }
 
     public ChatCreator(TextComponent component) {
@@ -32,11 +32,4 @@ public class ChatCreator {
         return component;
     }
 
-
-    private static void clearChat(Player player) {
-        if (player != null && player.isOnline()) {
-            for (int i = 0; i < 100; i++)
-                player.sendMessage("");
-        }
-    }
 }

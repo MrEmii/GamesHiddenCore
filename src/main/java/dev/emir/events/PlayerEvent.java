@@ -2,8 +2,12 @@ package dev.emir.events;
 
 import dev.emir.Main;
 import dev.emir.models.PlayerModel;
+import dev.emir.nametag.NametagEdit;
+import dev.emir.utils.ColorText;
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -17,6 +21,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.world.ChunkUnloadEvent;
+
 
 public class PlayerEvent implements Listener {
 
@@ -35,19 +40,26 @@ public class PlayerEvent implements Listener {
     public void onPlayerJoin(PlayerJoinEvent e) {
         Player player = e.getPlayer();
         PlayerModel mPlayer = Main.getInstance().getPlayerManager().get(e.getPlayer().getUniqueId().toString()).setPlayer(e.getPlayer());
+
         for (int i = 0; i < 100; i++) {
             player.sendMessage("");
         }
+
+        String prefix = PlaceholderAPI.setPlaceholders(player, "%luckperms_prefix%");
+        NametagEdit.getApi().setPrefix(player, prefix + " &r");
+
         if (!Main.getInstance().getConfig().getString("spawn.world").equalsIgnoreCase("undefined")) {
-            player.teleport(new Location(Bukkit.getWorld(Main.getInstance().getConfig().getString("spawn.world")), Main.getInstance().getConfig().getDouble("spawn.x"), Main.getInstance().getConfig().getDouble("spawn.y"), Main.getInstance().getConfig().getDouble("spawn.z")));
-            player.getLocation().setYaw((float) Main.getInstance().getConfig().getDouble("spawn.yaw"));
-            player.getLocation().setPitch((float) Main.getInstance().getConfig().getDouble("spawn.pitch"));
+            Location lobby = new Location(Bukkit.getWorld(Main.getInstance().getConfig().getString("spawn.world")), Main.getInstance().getConfig().getDouble("spawn.x"), Main.getInstance().getConfig().getDouble("spawn.y"), Main.getInstance().getConfig().getDouble("spawn.z"));
+            lobby.setYaw((float) Main.getInstance().getConfig().getDouble("spawn.yaw"));
+            lobby.setPitch((float) Main.getInstance().getConfig().getDouble("spawn.pitch"));
+
+            player.teleport(lobby);
         } else {
             if (player.isOp())
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&aUtiliza el comando &l/setlobby&r&a para setear el lobby!"));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&aUtiliza el comando &l/gh setlobby&a para setear el lobby!"));
         }
         for (final String msg : Main.getInstance().getConfig().getStringList("join-message")) {
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', msg));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', msg).replace("<player>", player.getName()));
         }
         try {
             mPlayer.save();
@@ -84,6 +96,12 @@ public class PlayerEvent implements Listener {
         }
 
         e.setLeaveMessage(null);
+    }
+
+
+    @EventHandler
+    public void onPlayerAchievement(PlayerAchievementAwardedEvent e) {
+        e.setCancelled(true);
     }
 
     @EventHandler
@@ -139,11 +157,19 @@ public class PlayerEvent implements Listener {
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent e) {
         Player player = e.getPlayer();
+        Location from = e.getFrom();
+        Location to = e.getTo();
+
+        if (from.getBlockX() == to.getBlockX() && from.getBlockY() == to.getBlockY() && from.getBlockZ() == to.getBlockZ()) {
+            return;
+        }
         if (e.getTo().getY() <= -44) {
             if (!Main.getInstance().getConfig().getString("spawn.world").equalsIgnoreCase("undefined")) {
-                e.setTo(new Location(Bukkit.getWorld(Main.getInstance().getConfig().getString("spawn.world")), Main.getInstance().getConfig().getDouble("spawn.x"), Main.getInstance().getConfig().getDouble("spawn.y"), Main.getInstance().getConfig().getDouble("spawn.z")));
-                player.getLocation().setYaw((float) Main.getInstance().getConfig().getInt("spawn.yaw"));
-                player.getLocation().setPitch((float) Main.getInstance().getConfig().getInt("spawn.pitch"));
+                Location lobby = new Location(Bukkit.getWorld(Main.getInstance().getConfig().getString("spawn.world")), Main.getInstance().getConfig().getDouble("spawn.x"), Main.getInstance().getConfig().getDouble("spawn.y"), Main.getInstance().getConfig().getDouble("spawn.z"));
+                lobby.setYaw((float) Main.getInstance().getConfig().getDouble("spawn.yaw"));
+                lobby.setPitch((float) Main.getInstance().getConfig().getDouble("spawn.pitch"));
+
+                e.setTo(lobby);
             }
 
         }
@@ -155,9 +181,10 @@ public class PlayerEvent implements Listener {
             Player player = (Player) event.getEntity();
             if (player.getLocation().getBlock().getY() < -44) {
                 if (!Main.getInstance().getConfig().getString("spawn.world").equalsIgnoreCase("undefined")) {
-                    player.teleport(new Location(Bukkit.getWorld(Main.getInstance().getConfig().getString("spawn.world")), Main.getInstance().getConfig().getDouble("spawn.x"), Main.getInstance().getConfig().getDouble("spawn.y"), Main.getInstance().getConfig().getDouble("spawn.z")));
-                    player.getLocation().setYaw((float) Main.getInstance().getConfig().getInt("spawn.yaw"));
-                    player.getLocation().setPitch((float) Main.getInstance().getConfig().getInt("spawn.pitch"));
+                    Location lobby = new Location(Bukkit.getWorld(Main.getInstance().getConfig().getString("spawn.world")), Main.getInstance().getConfig().getDouble("spawn.x"), Main.getInstance().getConfig().getDouble("spawn.y"), Main.getInstance().getConfig().getDouble("spawn.z"));
+                    lobby.setYaw((float) Main.getInstance().getConfig().getDouble("spawn.yaw"));
+                    lobby.setPitch((float) Main.getInstance().getConfig().getDouble("spawn.pitch"));
+                    player.teleport(lobby);
                 }
             }
             event.setCancelled(true);
@@ -166,13 +193,13 @@ public class PlayerEvent implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerBreakBlock(BlockBreakEvent event) {
-        if (!event.getPlayer().isOp() || !event.getPlayer().hasPermission("gh.break"))
+        if (!event.getPlayer().isOp() || !event.getPlayer().hasPermission("gh.break") && event.getPlayer().getGameMode() != GameMode.CREATIVE)
             event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerPlaceBlock(BlockPlaceEvent event) {
-        if (!event.getPlayer().isOp() || !event.getPlayer().hasPermission("gh.place"))
+        if (!event.getPlayer().isOp() || !event.getPlayer().hasPermission("gh.place") && event.getPlayer().getGameMode() != GameMode.CREATIVE)
             event.setCancelled(true);
     }
 

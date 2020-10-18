@@ -1,17 +1,7 @@
 name: GHCore
-version: 1.0
+version: 1.1
 main: dev.emir.Main
-depend: [ PlaceholderAPI, LuckPerms ]
+depend: [ PlaceholderAPI, ProtocolLib ]
 authors: [ Emir ]
 description: HubCore for GamesHidden
 load: STARTUP
-commands:
-  setlobby:
-    usage: /<command>
-    description: Comando para ubicar el lobby
-  item:
-    usage: /item <material> [cantidad] [name] [lore]
-    description: Obten un item cuztomizado
-  tpall:
-    usage: /tpall
-    description: Teletransporta a todos a tu ubicación

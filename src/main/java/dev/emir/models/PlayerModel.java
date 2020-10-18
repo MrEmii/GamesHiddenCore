@@ -1,13 +1,27 @@
 package dev.emir.models;
 
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
+import com.mojang.authlib.properties.PropertyMap;
+import com.mongodb.client.model.Filters;
 import dev.emir.Main;
+import dev.emir.utils.ColorText;
+import me.clip.placeholderapi.PlaceholderAPI;
+import net.md_5.bungee.api.chat.TextComponent;
+import net.minecraft.server.v1_8_R3.*;
 import org.bson.Document;
 import org.bson.codecs.pojo.annotations.BsonIgnore;
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_8_R3.util.CraftChatMessage;
 import org.bukkit.entity.Player;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 public class PlayerModel {
 
@@ -18,33 +32,25 @@ public class PlayerModel {
     private String last_server = "lobby";
     private double last_connection = 0;
     private String language = "es_mx";
-    private String rank = "default";
-    private double real_money = 0;
-    private double loot_coins = 0;
+    private int real_money = 0;
     private String username = "";
-    private double level = 0;
-    private double money = 0;
+    private int level = 0;
     private String uuid = "";
     private double xp = 0;
 
     @BsonIgnore
-    private transient Player playerTPA;
-
-    @BsonIgnore
     private transient Player player;
 
-    public PlayerModel set(String last_server, String rank, String username, String uuid) {
+    public PlayerModel set(String last_server, String username, String uuid) {
         this.last_server = last_server;
-        this.rank = rank;
         this.username = username;
         this.uuid = uuid;
         this.player = Bukkit.getPlayer(uuid);
         return this;
     }
 
-    public PlayerModel set(String last_server, String rank, Player player) {
+    public PlayerModel set(String last_server, Player player) {
         this.last_server = last_server;
-        this.rank = rank;
         this.username = player.getName();
         this.uuid = player.getUniqueId().toString();
         this.player = player;
@@ -108,28 +114,12 @@ public class PlayerModel {
         this.language = language;
     }
 
-    public String getRank() {
-        return rank;
-    }
-
-    public void setRank(String rank) {
-        this.rank = rank;
-    }
-
-    public double getReal_money() {
+    public int getReal_money() {
         return real_money;
     }
 
-    public void setReal_money(double real_money) {
+    public void setReal_money(int real_money) {
         this.real_money = real_money;
-    }
-
-    public double getLoot_coins() {
-        return loot_coins;
-    }
-
-    public void setLoot_coins(double loot_coins) {
-        this.loot_coins = loot_coins;
     }
 
     public String getUsername() {
@@ -140,20 +130,12 @@ public class PlayerModel {
         this.username = username;
     }
 
-    public double getLevel() {
+    public int getLevel() {
         return level;
     }
 
-    public void setLevel(double level) {
+    public void setLevel(int level) {
         this.level = level;
-    }
-
-    public double getMoney() {
-        return money;
-    }
-
-    public void setMoney(double money) {
-        this.money = money;
     }
 
     public String getUuid() {
@@ -180,19 +162,59 @@ public class PlayerModel {
     public PlayerModel setPlayer(Player player) {
         this.player = player;
         this.username = player.getName();
-        this.rank = Main.getInstance().getLuckPerms().getUserManager().getUser(UUID.fromString(uuid)).getPrimaryGroup();
         return this;
     }
 
+    public static void changeNameForTest(Player player) {
+        String prefix = PlaceholderAPI.setPlaceholders(player, "%luckperms_prefix%");
+        String colr = ColorText.translate(prefix.replaceAll(" ", "") + " &k1&r");
+        GameProfile gp = ((CraftPlayer) player).getProfile();
+        System.out.println(colr.length());
+        System.out.println(player.getDisplayName().length());
+        System.out.println(player.getName().length());
+        try {
+            Field nameField = GameProfile.class.getDeclaredField("name");
+            nameField.setAccessible(true);
+            nameField.set(gp, colr);
+        } catch (IllegalAccessException | NoSuchFieldException ex) {
+            throw new IllegalStateException(ex);
+        }
+        ((CraftPlayer) player).getHandle().playerConnection.sendPacket(new PacketPlayOutEntityDestroy(player.getEntityId()));
+        ((CraftPlayer) player).getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, ((CraftPlayer) player).getHandle()));
+        ((CraftPlayer) player).getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, ((CraftPlayer) player).getHandle()));
+        Bukkit.getOnlinePlayers().forEach(pl -> {
+            if (pl != player)
+                ((CraftPlayer) pl).getHandle().playerConnection.sendPacket(new PacketPlayOutNamedEntitySpawn(((CraftPlayer) player).getHandle()));
+        });
+    }
+
+    public void reload() {
+        PlayerModel model = Main.gson.fromJson(Main.getInstance().getMongodb().getCollection("production-users").find(Filters.eq("uuid", this.uuid)).first().toJson(), this.getClass());
+        Stream.of(model.getClass().getDeclaredFields()).forEach(field -> {
+            field.setAccessible(true);
+            try {
+                System.out.println(field.get(model));
+                this.getClass().getDeclaredField(field.getName()).set(this, field.get(model));
+            } catch (IllegalAccessException | NoSuchFieldException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    public void debug() {
+        Stream.of(this.getClass().getDeclaredFields()).forEach(field -> {
+            field.setAccessible(true);
+            try {
+                System.out.println(field.get(this));
+                System.out.println(field.getName());
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     public void save() {
-        Main.getInstance().getMongodb().replace("globalusers", "uuid", this.uuid, Document.parse(Main.gson.toJson(this)));
+        Main.getInstance().getMongodb().replace("production-users", "uuid", this.uuid, Document.parse(Main.gson.toJson(this)));
     }
 
-    public Player getPlayerTPA() {
-        return playerTPA;
-    }
-
-    public void setPlayerTPA(Player playerTPA) {
-        this.playerTPA = playerTPA;
-    }
 }

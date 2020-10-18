@@ -15,7 +15,7 @@ public class Mongod {
 
     public Mongod() {
 
-        client = MongoClients.create("mongodb+srv://gh_own:tm1Jyqi1SnejYedj@gameshidden.nqdla.azure.mongodb.net/admin?retryWrites=true&w=majority");
+        client = MongoClients.create("mongodb+srv://gh_own:tm1Jyqi1SnejYedj@gameshidden.nqdla.azure.mongodb.net/admin");
 
         database = client.getDatabase("GamesHidden");
     }

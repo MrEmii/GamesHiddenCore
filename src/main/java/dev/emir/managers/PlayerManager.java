@@ -26,14 +26,24 @@ public class PlayerManager {
     }
 
     public PlayerModel get(String identifier) {
-        if (users.find(eq("uuid", identifier)).first() == null && !models.containsKey(identifier)) {
-            PlayerModel model = new PlayerModel().setUuid(identifier);
-            model.save();
+        if (!models.containsKey(identifier)) {
+            Document doc = users.find(eq("uuid", identifier)).first();
+
+            PlayerModel model = null;
+
+            if (doc != null) {
+                model = Main.gson.fromJson(((Document) doc).toJson(), PlayerModel.class);
+            } else {
+                model = new PlayerModel().setUuid(identifier);
+            }
             this.models.put(identifier, model);
             return model;
         } else {
-            return Main.gson.fromJson(((Document) users.find(eq("uuid", identifier)).first()).toJson(), PlayerModel.class);
+            return this.models.get(identifier);
         }
     }
 
+    public void reload() {
+        this.models.values().forEach(PlayerModel::reload);
+    }
 }

@@ -6,13 +6,29 @@ spawn:
   yaw: 0
   pitch: 0
 
-doublejump:
-  sound: BAT_TAKEOFF
-  particle: ENDER_SIGNAL
+scoreboard:
+  title: '&5&lGames&d&lHidden'
+  board:
+    - ''
+    - '&9&lNick: &7{username}'
+    - '&9&lRango: %luckperms_primary_group_name%'
+    - '&9&lNivel: &7{level}'
+    - ''
+    - '&9&lLobby: &7{lobby}'
+    - '&9&lPlayers: &7{players}'
+    - ''
+    - '&9&lHiddenCoins: &7{balance}'
+    - ''
+    - '&emc.gameshidden.net'
+
 
 join-message:
-  - '&b&m-----------------------------------------------------'
-  - ''
-  - '&7Bienvenido a &3&lGamesHidden'
-  - ''
-  - '&b&m-----------------------------------------------------'
+  - '&6&m---------------------------------------------------'
+  - ' '
+  - '&b★ &3&l<player> &7Bienvenido a &5&lGamesHidden &d&lNETWORK!'
+  - ' '
+  - '&b★ &7Twitter: &dtwitter.com/MCGamesHidden'
+  - '&b★ &7Facebook: &dfacebook.com/GamesHidden'
+  - '&b★ &7Tienda: &dtienda.GamesHidden.com'
+  - ' '
+  - '&6&m---------------------------------------------------'

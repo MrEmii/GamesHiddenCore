@@ -22,8 +22,8 @@ public class SignsEvent implements Listener {
     @EventHandler
     public void onSignChange(SignChangeEvent event) {
         Player player = event.getPlayer();
-        if (player.isOp() || player.hasPermission("gh.sign")) {
-            if (event.getLine(0).equalsIgnoreCase("game")) {
+        if (player.isOp() || player.hasPermission("gh.op")) {
+            if (event.getLine(0).equalsIgnoreCase("[game]")) {
                 SignsModel model = Main.getInstance().getSignsManager().getSign(event.getLine(1));
                 if (model != null) {
                     Main.getInstance().getBungeeCordListener().gameInformation(model.getName());
