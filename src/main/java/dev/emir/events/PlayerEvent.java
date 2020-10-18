@@ -2,9 +2,6 @@ package dev.emir.events;
 
 import dev.emir.Main;
 import dev.emir.models.PlayerModel;
-import dev.emir.nametag.NametagEdit;
-import dev.emir.utils.ColorText;
-import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -44,9 +41,6 @@ public class PlayerEvent implements Listener {
         for (int i = 0; i < 100; i++) {
             player.sendMessage("");
         }
-
-        String prefix = PlaceholderAPI.setPlaceholders(player, "%luckperms_prefix%");
-        NametagEdit.getApi().setPrefix(player, prefix + " &r");
 
         if (!Main.getInstance().getConfig().getString("spawn.world").equalsIgnoreCase("undefined")) {
             Location lobby = new Location(Bukkit.getWorld(Main.getInstance().getConfig().getString("spawn.world")), Main.getInstance().getConfig().getDouble("spawn.x"), Main.getInstance().getConfig().getDouble("spawn.y"), Main.getInstance().getConfig().getDouble("spawn.z"));

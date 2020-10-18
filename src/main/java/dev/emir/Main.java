@@ -10,7 +10,6 @@ import dev.emir.events.SignsEvent;
 import dev.emir.managers.PlayerManager;
 import dev.emir.managers.SignsManager;
 import dev.emir.models.PlayerModel;
-import dev.emir.nametag.NametagEdit;
 import dev.emir.scoreboad.ScoreboardObject;
 import dev.emir.scoreboad.ScoreboardObjectHandler;
 import dev.emir.utils.ColorText;
@@ -32,7 +31,6 @@ public class Main extends JavaPlugin {
     private BungeeCoordEvents bungeeCordListener;
     private SignsManager signsManager;
     private ScoreboardObjectHandler scoreboardDataHandler;
-    private NametagEdit nameTag;
 
     @Override
     public void onEnable() {
@@ -47,8 +45,6 @@ public class Main extends JavaPlugin {
             this.mongodb = new Mongod();
             this.scoreboardDataHandler = new ScoreboardObjectHandler();
             this.scoreboardDataHandler.enable();
-            this.nameTag = new NametagEdit();
-            this.nameTag.onEnable();
             registerEvents(new PlayerEvent(), this.scoreboardDataHandler);
             this.signsManager = new SignsManager(this.mongodb.getCollection("signs"));
             this.playerManager = new PlayerManager(this.mongodb.getCollection("production-users"));
@@ -74,7 +70,6 @@ public class Main extends JavaPlugin {
         super.reloadConfig();
         this.scoreboardDataHandler.reload();
         Bukkit.getOnlinePlayers().forEach(this.scoreboardDataHandler::reloadData);
-        this.getPlayerManager().reload();
     }
 
     public void setupScoreboard() {
@@ -121,7 +116,6 @@ public class Main extends JavaPlugin {
         Messenger messenger = Bukkit.getServer().getMessenger();
         messenger.unregisterIncomingPluginChannel(this, "BungeeCord", this.bungeeCordListener);
         messenger.unregisterOutgoingPluginChannel(this);
-        this.nameTag.onDisable();
     }
 
     public PlayerManager getPlayerManager() {
@@ -146,9 +140,5 @@ public class Main extends JavaPlugin {
 
     public ScoreboardObjectHandler getScoreboardDataHandler() {
         return scoreboardDataHandler;
-    }
-
-    public NametagEdit getNameTag() {
-        return nameTag;
     }
 }
