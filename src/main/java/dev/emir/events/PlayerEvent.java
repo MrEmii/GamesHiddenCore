@@ -19,6 +19,10 @@ import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.world.ChunkUnloadEvent;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+
 
 public class PlayerEvent implements Listener {
 
@@ -35,34 +39,39 @@ public class PlayerEvent implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
-        Player player = e.getPlayer();
-        PlayerModel mPlayer = Main.getInstance().getPlayerManager().get(e.getPlayer().getUniqueId().toString()).setPlayer(e.getPlayer());
 
-        for (int i = 0; i < 100; i++) {
-            player.sendMessage("");
-        }
+        Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), new Runnable() {
+            @Override
+            public void run() {
+                Player player = e.getPlayer();
+                PlayerModel mPlayer = Main.getInstance().getPlayerManager().get(e.getPlayer().getUniqueId().toString()).setPlayer(e.getPlayer());
 
-        if (!Main.getInstance().getConfig().getString("spawn.world").equalsIgnoreCase("undefined")) {
-            Location lobby = new Location(Bukkit.getWorld(Main.getInstance().getConfig().getString("spawn.world")), Main.getInstance().getConfig().getDouble("spawn.x"), Main.getInstance().getConfig().getDouble("spawn.y"), Main.getInstance().getConfig().getDouble("spawn.z"));
-            lobby.setYaw((float) Main.getInstance().getConfig().getDouble("spawn.yaw"));
-            lobby.setPitch((float) Main.getInstance().getConfig().getDouble("spawn.pitch"));
+                for (int i = 0; i < 100; i++) {
+                    player.sendMessage("");
+                }
 
-            player.teleport(lobby);
-        } else {
-            if (player.isOp())
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&aUtiliza el comando &l/gh setlobby&a para setear el lobby!"));
-        }
-        for (final String msg : Main.getInstance().getConfig().getStringList("join-message")) {
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', msg).replace("<player>", player.getName()));
-        }
-        try {
-            mPlayer.save();
-        } catch (Exception e1) {
-            e1.printStackTrace();
-        }
+                if (!Main.getInstance().getConfig().getString("spawn.world").equalsIgnoreCase("undefined")) {
+                    Location lobby = new Location(Bukkit.getWorld(Main.getInstance().getConfig().getString("spawn.world")), Main.getInstance().getConfig().getDouble("spawn.x"), Main.getInstance().getConfig().getDouble("spawn.y"), Main.getInstance().getConfig().getDouble("spawn.z"));
+                    lobby.setYaw((float) Main.getInstance().getConfig().getDouble("spawn.yaw"));
+                    lobby.setPitch((float) Main.getInstance().getConfig().getDouble("spawn.pitch"));
 
-        e.setJoinMessage(null);
+                    player.teleport(lobby);
+                } else {
+                    if (player.isOp())
+                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&aUtiliza el comando &l/gh setlobby&a para setear el lobby!"));
+                }
+                for (final String msg : Main.getInstance().getConfig().getStringList("join-message")) {
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', msg).replace("<player>", player.getName()));
+                }
+                try {
+                    mPlayer.save();
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                }
 
+                e.setJoinMessage(null);
+            }
+        });
     }
 
     @EventHandler
@@ -205,4 +214,31 @@ public class PlayerEvent implements Listener {
         }
     }
 
+    private List<String> blockedCommand = Arrays.asList("pl", "plugins", "ver", "version", "about", "icanhasbukkit", "bukkit:?", "bukkit:pl", "bukkit:plugins", "bukkit:about", "bukkit:help", "bukkit:ver", "bukkit:version", "minecraft:me", "?", "help");
+
+    @EventHandler
+    public void onPlayerCommandPreProcess(PlayerCommandPreprocessEvent event) {
+        for (String command : blockedCommand) {
+            if (event.getMessage().toLowerCase().equals("/" + command) || event.getMessage().toLowerCase().startsWith("/" + command + " ")) {
+                if (!event.getPlayer().hasPermission("gh.staff")) {
+                    event.setCancelled(true);
+                    return;
+                }
+                return;
+            }
+        }
+        for (String command : Main.getInstance().getConfig().getStringList("commands.everyone")) {
+            if (event.getMessage().toLowerCase().equals("/" + command) || event.getMessage().toLowerCase().startsWith("/" + command + " ")) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+        if (!event.getPlayer().hasPermission("gh.staff"))
+            for (String command : Main.getInstance().getConfig().getStringList("commands.users")) {
+                if (event.getMessage().toLowerCase().equals("/" + command) || event.getMessage().toLowerCase().startsWith("/" + command + " ")) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+    }
 }

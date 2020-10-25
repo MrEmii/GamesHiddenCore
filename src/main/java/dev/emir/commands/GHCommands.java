@@ -359,7 +359,7 @@ public class GHCommands {
         Player player = args.getPlayer();
         String[] argz = args.getArgs();
         if (argz.length < 1) {
-            args.getSender().sendMessage(ColorText.translate("&cUsage: /" + args.getLabel() + " <playerName>"));
+            args.getSender().sendMessage(ColorText.translate("&cUso: /" + args.getLabel() + " <playerName>"));
         } else {
             Player target = Bukkit.getPlayer(argz[0]);
             if (target == null || !target.isOnline()) {
@@ -370,5 +370,29 @@ public class GHCommands {
             player.sendMessage( ColorText.translate("&eAbriendo inventario de &b" + target.getName()));
         }
     }
-
+    @Command(name = "fly", aliases = {"f"}, permission = "gh.staff", inGameOnly = true)
+    public void fly(CommandArgs args) {
+        Player target = null;
+        if (args.getArgs().length < 1) {
+            if (args.getSender() instanceof Player) {
+                target = args.getPlayer();
+            } else {
+                args.getSender().sendMessage(ColorText.translate("&cUsage: /" + args.getLabel() + " <playerName>"));
+                return;
+            }
+        }
+        if (target == null) {
+            target = Bukkit.getPlayer(args.getArgs()[0]);
+            if (target == null || !target.isOnline()) {
+                args.getSender().sendMessage(ColorText.translate("&cEl jugador no existe o no está online."));
+                return;
+            }
+        }
+        if (args.getSender() instanceof Player && !target.equals(args.getPlayer()) && !args.getSender().isOp()) {
+            return;
+        }
+        boolean toggle = !target.getAllowFlight();
+        target.setAllowFlight(toggle);
+        target.setFlying(toggle);
+    }
 }

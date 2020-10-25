@@ -12,6 +12,7 @@ import dev.emir.models.PlayerModel;
 import dev.emir.scoreboad.ScoreboardObject;
 import dev.emir.scoreboad.ScoreboardObjectHandler;
 import dev.emir.utils.ColorText;
+import dev.emir.utils.Multithreading;
 import dev.emir.utils.command.CommandFramework;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
@@ -72,12 +73,11 @@ public class Main extends JavaPlugin {
     }
 
     public void setupScoreboard() {
-        Bukkit.getScheduler().runTaskTimer(Main.getInstance(), new Runnable() {
+        Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 getServer().getOnlinePlayers().forEach(player -> {
                     PlayerModel model = getPlayerManager().get(player.getUniqueId().toString());
-                    model.debug();
                     ScoreboardObject scoreboard = scoreboardDataHandler.getScoreboardFor(player);
                     Main.getInstance().getBungeeCordListener().playerCount("ALL");
                     scoreboard.clear();
@@ -95,7 +95,12 @@ public class Main extends JavaPlugin {
                     scoreboard.update(player);
                 });
             }
-        }, 0L, 200L);
+        };
+
+       Bukkit.getScheduler().runTaskTimerAsynchronously(this, runnable, 2L, 5L);
+
+
+
     }
 
     public void setupCommands() {
